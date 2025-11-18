@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -14,12 +13,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Mock user data (temporary - until database works)
+// Mock user data (temporary - simple password check for testing)
 const mockUser = {
   id: '1',
   name: 'Admin User',
   email: 'admin@example.com',
-  password: '$2b$10$K7L8yWjmkQD8h2F5ZGhX8OqGhVtJ3R9XzF6N8K4L2P7Q9S1T5V3W7Y', // admin123
+  password: 'admin123', // Plain text for testing
   role: 'Admin',
   status: 'Active'
 };
@@ -29,7 +28,8 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    message: 'QA Bug Tracker Backend is running!'
+    message: 'QA Bug Tracker Backend is running!',
+    cors: 'Enabled for Netlify'
   });
 });
 
@@ -38,18 +38,21 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    console.log('Login attempt:', email);
+    console.log('Login attempt:', { email, password });
     
-    // Check if user exists (mock check)
+    // Check if user exists
     if (email !== mockUser.email) {
+      console.log('Email not found:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, mockUser.password);
-    if (!isValidPassword) {
+    // Check password (simple comparison for testing)
+    if (password !== mockUser.password) {
+      console.log('Password mismatch:', { provided: password, expected: mockUser.password });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+    
+    console.log('Login successful for:', email);
     
     // Generate JWT token
     const token = jwt.sign(
@@ -58,7 +61,7 @@ app.post('/api/auth/login', async (req, res) => {
         email: mockUser.email,
         role: mockUser.role 
       },
-      process.env.JWT_SECRET || 'fallback-secret-key',
+      process.env.JWT_SECRET || 'fallback-secret-key-for-testing',
       { expiresIn: '24h' }
     );
     
@@ -88,7 +91,10 @@ app.get('/api/projects', (req, res) => {
       description: 'Test project for QA Bug Tracker',
       status: 'In Progress',
       issueCount: 1,
-      progress: 25
+      progress: 25,
+      members: [mockUser],
+      startDate: '2024-11-01',
+      endDate: '2024-12-31'
     }
   ]);
 });
@@ -108,8 +114,27 @@ app.get('/api/projects/:id/issues', (req, res) => {
       status: 'Open',
       assignedTo: mockUser,
       reportedBy: mockUser,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
+  ]);
+});
+
+// Mock labels endpoint
+app.get('/api/labels', (req, res) => {
+  res.json([
+    { id: '1', name: 'Bug', color: '#ff4d4f' },
+    { id: '2', name: 'Feature', color: '#52c41a' },
+    { id: '3', name: 'Enhancement', color: '#1890ff' }
+  ]);
+});
+
+// Mock issue types endpoint
+app.get('/api/issue-types', (req, res) => {
+  res.json([
+    { id: '1', name: 'Bug', icon: 'bug_report' },
+    { id: '2', name: 'Enhancement', icon: 'lightbulb' },
+    { id: '3', name: 'Correction', icon: 'build' }
   ]);
 });
 
@@ -121,4 +146,5 @@ app.use('/api/*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌍 CORS enabled for: https://tubular-syrnki-3cb15e.netlify.app`);
+  console.log(`🔑 Login credentials: admin@example.com / admin123`);
 });
