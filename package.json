@@ -1,18 +1,31 @@
 {
-  "name": "qa-bug-tracker-backend",
+  "name": "ui-ux-comparison-backend",
   "version": "1.0.0",
-  "main": "server.js",
+  "description": "Backend API for UI/UX Comparison Tool",
+  "main": "src/server.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "build": "echo 'No build step needed for Node.js'",
+    "db:create": "node src/config/createDatabase.js",
+    "db:migrate": "node src/config/migrations.js",
+    "db:update": "node src/config/update-schema.js",
+    "db:enhance": "node src/config/enhanced-migrations.js"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
+  "keywords": ["express", "postgresql", "api"],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
+    "pg": "^8.11.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.3.1",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
