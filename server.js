@@ -147,6 +147,42 @@ app.get('/api/projects/:id/issues', (req, res) => {
   ]);
 });
 
+// Mock user creation endpoint
+app.post('/api/users', (req, res) => {
+  try {
+    const { name, email, phoneNumber, role, status, password } = req.body;
+    
+    console.log('Create user attempt:', { name, email, role, status });
+    
+    // Simple validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+    
+    // Mock successful user creation
+    const newUser = {
+      id: Date.now().toString(), // Simple ID generation
+      name,
+      email,
+      phoneNumber: phoneNumber || '',
+      role: role || 'Developer',
+      status: status || 'Active',
+      createdAt: new Date().toISOString()
+    };
+    
+    console.log('User created successfully:', newUser);
+    
+    res.status(201).json({
+      message: 'User created successfully',
+      user: newUser
+    });
+    
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Mock labels endpoint
 app.get('/api/labels', (req, res) => {
   res.json([
