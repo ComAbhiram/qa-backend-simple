@@ -6,11 +6,37 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// More permissive CORS for testing
 app.use(cors({
-  origin: ['https://tubular-syrnki-3cb15e.netlify.app', 'http://localhost:5173'],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow any netlify subdomain and localhost
+    if (origin.includes('netlify.app') || 
+        origin.includes('localhost') || 
+        origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Allow specific domains
+    const allowedOrigins = [
+      'https://tubular-syrnki-3cb15e.netlify.app',
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
 app.use(express.json());
 
 // Mock user data (temporary - simple password check for testing)
@@ -29,7 +55,7 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     message: 'QA Bug Tracker Backend is running!',
-    cors: 'Enabled for Netlify'
+    cors: 'Enabled for all Netlify domains'
   });
 });
 
@@ -38,7 +64,8 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    console.log('Login attempt:', { email, password });
+    console.log('Login attempt from:', req.headers.origin);
+    console.log('Login data:', { email, password });
     
     // Check if user exists
     if (email !== mockUser.email) {
@@ -145,6 +172,6 @@ app.use('/api/*', (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 CORS enabled for: https://tubular-syrnki-3cb15e.netlify.app`);
+  console.log(`🌍 CORS enabled for all Netlify domains`);
   console.log(`🔑 Login credentials: admin@example.com / admin123`);
 });
